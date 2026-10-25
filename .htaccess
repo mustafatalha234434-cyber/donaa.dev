@@ -1,0 +1,34 @@
+# donaa.dev — Apache / cPanel ayarı (siteyle birlikte web klasörüne yüklenir)
+
+# Klasör içeriği listelenmesin
+Options -Indexes
+
+# Güvenlik başlıkları (Netlify'daki _headers ile aynı)
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set Content-Security-Policy "frame-ancestors 'none'"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+</IfModule>
+
+# HTTP → HTTPS (sertifika yenilemeleri için /.well-known hariç)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Hostinger Git ile yüklenince oluşan .git klasörü dışarıya kapalı
+  RewriteRule (^|/)\.git(/|$) - [F,L]
+</IfModule>
+
+# Videolar, görseller ve fontlar tarayıcıda 7 gün önbelleklenir
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType video/mp4 "access plus 7 days"
+  ExpiresByType image/png "access plus 7 days"
+  ExpiresByType image/jpeg "access plus 7 days"
+  ExpiresByType font/woff2 "access plus 7 days"
+</IfModule>
